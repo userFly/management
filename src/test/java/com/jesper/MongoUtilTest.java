@@ -17,13 +17,11 @@ public class MongoUtilTest {
         String id = UUID.randomUUID().toString().replaceAll("-", "");
 
         LinkedHashMap<String,Object> metaMap = new LinkedHashMap<String, Object>();
-        System.out.println("我的id是:" + id );
         metaMap.put("contentType","cat");
         metaMap.put("_id",id);
 
 
         mongoUtil.uploadFile(file,id,metaMap);
-        System.out.println("Upload File Success");
     }
 
     @Test
@@ -32,7 +30,6 @@ public class MongoUtilTest {
         String id = "94b6c9aee0cb4c98b6f670a953dd5589";
 
         mongoUtil.deleteFile(id);
-        System.out.println("Delete File Success");
     }
 
     @Test

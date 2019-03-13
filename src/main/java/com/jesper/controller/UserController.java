@@ -1,10 +1,14 @@
 package com.jesper.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.jesper.mapper.UserMapper;
 import com.jesper.model.User;
 
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.HtmlEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -14,7 +18,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-
 
 
 import java.util.Date;
@@ -36,6 +39,15 @@ public class UserController {
 
     @Value("${spring.mail.username}")
     private String Sender; //读取配置文件中的参数
+
+    @Value(("${spring.mail.host}"))
+    private String host;
+
+    @Value("${spring.mail.prot}")
+    private int prot;
+
+    @Value("${spring.mail.code}")
+    private String code;
 
     /**
      * 登录跳转
@@ -88,7 +100,6 @@ public class UserController {
      */
     @PostMapping("/user/register")
     public String registerPost(User user, Model model) {
-        System.out.println("用户名" + user.getUserName());
         try {
             userMapper.selectIsName(user);
             model.addAttribute("error", "该账号已存在！");
@@ -97,7 +108,6 @@ public class UserController {
             user.setAddDate(date);
             user.setUpdateDate(date);
             userMapper.insert(user);
-            System.out.println("注册成功");
             model.addAttribute("error", "恭喜您，注册成功！");
             return "login";
         }
@@ -125,23 +135,24 @@ public class UserController {
      * @return
      */
     @PostMapping("/user/forget")
-    public String forgetPost(User user, Model model) {
+    public void forgetPost(User user, Model model, HttpServletRequest request, HttpServletResponse response) throws EmailException {
         String password = userMapper.selectPasswordByName(user);
         if (password == null) {
             model.addAttribute("error", "帐号不存在或邮箱不正确！");
         } else {
-            String email = user.getEmail();
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(Sender);
-            message.setTo(email); //接收者邮箱
-            message.setSubject("YX后台信息管理系统-密码找回");
-            StringBuilder sb = new StringBuilder();
-            sb.append(user.getUserName() + "用户您好！您的注册密码是：" + password + "。感谢您使用YX信息管理系统！");
-            message.setText(sb.toString());
-            mailSender.send(message);
-            model.addAttribute("error", "密码已发到您的邮箱,请查收！");
+            int verificationCode = (int) ((Math.random() * 9 + 1) * 100000);
+            HtmlEmail htmlEmail = new HtmlEmail();
+            htmlEmail.setHostName(host);
+            htmlEmail.setSmtpPort(prot);
+            htmlEmail.setSSLOnConnect(true);
+            htmlEmail.setCharset("utf-8");
+            htmlEmail.addTo(user.getEmail());
+            htmlEmail.setFrom(Sender, "XXX后台信息管理系统-密码找回");
+            htmlEmail.setAuthentication(Sender, code);
+            htmlEmail.setSubject("用户您好！您的注册密码是：" + password + "。感谢您使用YX信息管理系统！");
+            htmlEmail.setMsg("邮件内容");
+            htmlEmail.send();
         }
-        return "forget";
 
     }
 
@@ -158,7 +169,7 @@ public class UserController {
         Date date = new Date();
         user.setUpdateDate(date);
         int i = userMapper.update(user);
-        httpSession.setAttribute("user",user);
+        httpSession.setAttribute("user", user);
         return "redirect:userManage";
     }
 

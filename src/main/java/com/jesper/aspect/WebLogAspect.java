@@ -36,8 +36,6 @@ public class WebLogAspect {
      */
     @Before("executeService()")
     public void doBeforeAdvice(JoinPoint joinPoint){
-        System.out.println(joinPoint.toShortString() + " 开始");
-
 
         Map<String, List<Long>> methodTimeMap = threadMap.get(Thread.currentThread().getId());
         List<Long> list;
@@ -65,10 +63,6 @@ public class WebLogAspect {
         joinPoint.getTarget();
         //用的最多 通知的签名
         Signature signature = joinPoint.getSignature();
-        //代理的是哪一个方法
-        System.out.println("代理方法:" + signature.getName());
-        //AOP代理类的名字
-        System.out.println("AOP代理类的名字:" + signature.getDeclaringTypeName());
         //AOP代理类的类（class）信息
         signature.getDeclaringType();
         //获取RequestAttributes
@@ -84,15 +78,8 @@ public class WebLogAspect {
             parameterMap.put(parameter,request.getParameter(parameter));
         }
         String str = JSON.toJSONString(parameterMap);
-        if(obj.length > 0) {
-            System.out.println("请求的参数信息为："+str);
-        }
-
-        System.out.println(joinPoint.toShortString() + " 结束");
         Map<String, List<Long>> methodTimeMap = threadMap.get(Thread.currentThread().getId());
         List<Long> list = methodTimeMap.get(joinPoint.toShortString());
-        System.out.println("代理方法:" + signature.getName() + ", 耗时：" +
-                (System.currentTimeMillis() - list.get(list.size() - 1)));
         list.remove(list.size() - 1);
     }
 }

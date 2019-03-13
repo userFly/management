@@ -9,7 +9,6 @@ import java.util.TimerTask;
 public class Timers implements Runnable {
     @Override
     public void run() {
-        System.out.println("计数器线程已启动....");
 
         TimerTask task = new TimerTask() {
             @Override

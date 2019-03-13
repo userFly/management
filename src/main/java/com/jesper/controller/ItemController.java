@@ -122,6 +122,7 @@ public class ItemController {
 
     String imageName = null;
 
+
     @GetMapping("/user/itemEdit")
     public String itemEditGet(Model model, Item item) {
         ItemCategory itemCategory = new ItemCategory();
@@ -158,9 +159,8 @@ public class ItemController {
         item.setUpdated(date);
         item.setBarcode("");
         item.setImage("");
-        int rannum = 0;
+        int rannum = (int) (new Random().nextDouble() * (99999 - 10000 + 1)) + 1000;
         if (file.isEmpty()) {
-            System.out.println("图片未上传");
         } else {
             try {
                 Path path = Paths.get(ROOT, file.getOriginalFilename());
@@ -185,7 +185,6 @@ public class ItemController {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            System.out.println("get File by Id Success");
         }
 
         if (item.getId() != 0) {

@@ -17,6 +17,7 @@ public class DateUtil {
     public static Date strToDate(String date) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date result = null;
+        System.out.println();
         try {
             result = sdf.parse(date);
         } catch (Exception e) {
