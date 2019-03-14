@@ -17,6 +17,5 @@ public class Application {
 		//计时器线程
 		Timers timers = new Timers();
 		timers.run();
-
 	}
 }

@@ -7,14 +7,23 @@ import com.jesper.model.Item;
 import com.jesper.model.ItemCategory;
 import com.jesper.model.ReItem;
 import com.jesper.model.ResObject;
-import com.jesper.util.*;
-import com.mongodb.gridfs.GridFSDBFile;
+import com.jesper.util.Constant;
+import com.jesper.util.DateUtil;
+import com.jesper.util.ExcelUtil;
+import com.jesper.util.FilterUtil;
+import com.jesper.util.MongoUtil;
+import com.jesper.util.PageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,8 +32,6 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -47,8 +54,7 @@ public class ItemController {
     @Autowired
     private ReItemMapper reItemMapper;
 
-    public static final String ROOT = "src/main/resources/static/img/item/";
-
+    FilterUtil filterUtil = new FilterUtil();
     MongoUtil mongoUtil = new MongoUtil();
 
     private final ResourceLoader resourceLoader;
@@ -61,6 +67,8 @@ public class ItemController {
     List<Item> itemList;
 
     File getFile = null;
+
+    public static final String ROOT = "src/main/resources/static/img/item/";
 
     @RequestMapping("/user/itemManage_{pageCurrent}_{pageSize}_{pageCount}")
     public String itemManage(Item item, @PathVariable Integer pageCurrent,
@@ -122,7 +130,6 @@ public class ItemController {
 
     String imageName = null;
 
-
     @GetMapping("/user/itemEdit")
     public String itemEditGet(Model model, Item item) {
         ItemCategory itemCategory = new ItemCategory();
@@ -132,20 +139,7 @@ public class ItemController {
         model.addAttribute("itemCategoryList", itemCategoryList);
         if (item.getId() != 0) {
             Item item1 = itemMapper.findById(item);
-            String id = String.valueOf(item.getId());
-            GridFSDBFile fileById = mongoUtil.getFileById(id);
-            if (fileById != null) {
-                StringBuilder sb = new StringBuilder(ROOT);
-                imageName = fileById.getFilename();
-                sb.append(imageName);
-                try {
-                    getFile = new File(sb.toString());
-                    fileById.writeTo(getFile);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                item1.setImage(imageName);
-            }
+            imageName = item1.getImage();
             model.addAttribute("item", item1);
         }
         return "item/itemEdit";
@@ -158,39 +152,19 @@ public class ItemController {
         item.setCreated(date);
         item.setUpdated(date);
         item.setBarcode("");
-        item.setImage("");
         int rannum = (int) (new Random().nextDouble() * (99999 - 10000 + 1)) + 1000;
         if (file.isEmpty()) {
         } else {
             try {
-                Path path = Paths.get(ROOT, file.getOriginalFilename());
-                File tempFile = new File(path.toString());
-                if (!tempFile.exists()) {
-                    Files.copy(file.getInputStream(), path);
-                }
-                LinkedHashMap<String, Object> metaMap = new LinkedHashMap<String, Object>();
-                String id = null;
-                if (item.getId() != 0) {
-                    id = String.valueOf(item.getId());
-                } else {
-                    Random random = new Random();
-                    rannum = (int) (random.nextDouble() * (99999 - 10000 + 1)) + 1000;// 获取5位随机数
-                    id = String.valueOf(rannum);
-                }
-                metaMap.put("contentType", "jpg");
-                metaMap.put("_id", id);
-                mongoUtil.uploadFile(tempFile, id, metaMap);
-                tempFile.delete();
-                getFile.delete();
+                String fileName = filterUtil.fileUpload(file);
+                item.setImage(fileName);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
-
         if (item.getId() != 0) {
             itemMapper.update(item);
         } else {
-
             item.setId(rannum);
             itemMapper.insert(item);
         }
