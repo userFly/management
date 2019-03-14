@@ -11,7 +11,6 @@ import com.jesper.util.Constant;
 import com.jesper.util.DateUtil;
 import com.jesper.util.ExcelUtil;
 import com.jesper.util.FilterUtil;
-import com.jesper.util.MongoUtil;
 import com.jesper.util.PageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -55,7 +54,6 @@ public class ItemController {
     private ReItemMapper reItemMapper;
 
     FilterUtil filterUtil = new FilterUtil();
-    MongoUtil mongoUtil = new MongoUtil();
 
     private final ResourceLoader resourceLoader;
 
